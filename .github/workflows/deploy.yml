@@ -49,7 +49,16 @@ jobs:
       - name: Build
         run: npm run build -- --configuration production
         # Resultado: genera la carpeta dist/template-ng-zorro con todos los archivos listos
-
+      - name: Debug dist contents
+        run: |
+          echo "PWD:"
+          pwd
+          echo "=== ls ==="
+          ls
+          echo "=== ls dist ==="
+          ls dist || echo "dist NO existe"
+          echo "=== find dist (hasta 3 niveles) ==="
+          find dist -maxdepth 3 -type d || echo "no hay directorios en dist"
       # 7) Subir assets con caché largo
       - name: Upload assets
         run: |
