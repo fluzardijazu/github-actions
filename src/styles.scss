@@ -1,0 +1,72 @@
+html, body, * {
+    font-family: 'arial'!important;
+}
+
+:root {
+// colors
+--color-red-primary-dark: #a71930;
+--color-red-primary: #CB1735;
+--color-grey-dark: #37424a;
+--color-grey-medium: #5c7f92;
+--color-grey-light: #c5d2e0;
+--color-background:#F6F8FA;
+--color-border-primary:#EAEEF1;
+--yellow:#d7b608;
+--green:#19a734;
+--blue:#1967a7;
+--black:#000000;
+--orange:#f56f15;
+--gray: var(--color-grey-medium);
+
+
+// Font size
+--font-32px: 2em;
+--font-28px: 1.67em;
+--font-24px: 1.5em;
+--font-22px: 1.375em;
+--font-20px: 1.25em;
+--font-18px: 1.125em;
+--font-16px: 1em;
+--font-14px: 0.875em;
+--font-13px: 0.8125em;
+--font-12px: 0.75em;
+
+// space to maring, padding, etc
+--space-4px:4px;
+--space-8px:8px;
+--space-16px:16px;
+--space-24px:24px;
+--space-32px:32px;
+--space-40px:40px;
+--space-48px:48px;
+--space-56px:56px;
+--space-64px:64px;
+--space-72px:72px;
+--space-80px:80px;
+}
+
+@font-face {
+    font-family: 'montserrat';
+    src: url(assets/fonts/Montserrat-Bold.otf) format("opentype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'montserrat';
+    src: url(assets/fonts/Montserrat-Medium.otf) format("opentype");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'montserrat';
+    src: url(assets/fonts/Montserrat-Regular.otf) format("opentype");
+    font-weight: 400;
+    font-style: normal;
+}
+.icon {
+    &.icon {
+        background-image: url('./assets/icons/check-solid.svg');
+    }
+}

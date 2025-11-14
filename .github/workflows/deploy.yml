@@ -1,0 +1,92 @@
+#ACCOUNT ID = 669246429926 (cuenta de aws)
+#Cree un role en aws con los permisos necesarios y el trust relationship con github
+#REGION = us-esast-2 (Ohio)
+#ANGULAR_PROJECT = dist/template-ng-zorro (El nombre de la carpeta que se genera en dist, esta en angular.json, outputPath)
+
+name: deploy-to-s3   # Nombre del workflow
+
+on:
+  pull_request:
+    types: [closed]          # Se dispara cuando un PR hacia main se cierra
+    branches: [main]         # y solo si es sobre la rama main
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true   # Corre solo si el PR fue mergeado
+    runs-on: ubuntu-latest   # Runner Linux provisto por GitHub
+    concurrency: # Habilita que solo haya un deploy en curso
+      group: prod-deploy
+      cancel-in-progress: true
+    steps:
+      # 1) Configurar credenciales AWS usando Access Key + Secret
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}           # Secret guardado en GitHub
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # Secret guardado en GitHub
+          aws-region: us-east-2                                         # Región (Ohio)
+
+      # 2) Clona el repo
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 3) Prepara Node.js (Angular necesita Node para compilar)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # 4) Copiar environment.ts desde un secret (opcional si lo usas)
+      - name: Copy environment.ts
+        run: echo "${{ secrets.ENVIRONMENT_TS_DEV }}" > src/environments/environment.ts
+
+      # 5) Instalar dependencias Angular
+      - name: Install dependencies
+        run: npm ci
+
+      # 6) Build Angular en modo producción
+      - name: Build
+        run: npm run build -- --configuration production
+        # Resultado: genera la carpeta dist/template-ng-zorro con todos los archivos listos
+
+      # 7) Subir assets con caché largo
+      - name: Upload assets
+        run: |
+          OUT="dist/template-ng-zorro"
+          aws s3 sync "$OUT" "s3://guthub-actions-fl" \
+            --delete \
+            --exclude "*" \
+            --include "*.js" --include "*.css" \
+            --include "*.png" --include "*.jpg" --include "*.svg" --include "*.woff*" \
+            --cache-control "public,max-age=31536000,immutable" \
+            --acl public-read
+        # Cache-Control explicado:
+        # - public: cacheable por todos
+        # - max-age=31536000: 1 año en segundos
+        # - immutable: el navegador no revalida, confía en que no cambia
+        # Justificación: Angular genera archivos con hash en el nombre,
+        # al cambiar el contenido cambia el nombre, así podemos cachear por largo tiempo.
+
+      # 8) Subir HTML con caché corto y añadir fallback para SPA
+      - name: Upload html + SPA fallback
+        run: |
+          OUT="dist/template-ng-zorro"
+          aws s3 sync "$OUT" "s3://guthub-actions-fl" \
+            --exclude "*" --include "*.html" \
+            --cache-control "public,max-age=300" \
+            --acl public-read
+          aws s3 cp "$OUT/index.html" "s3://guthub-actions-fl/404.html" \
+            --cache-control "public,max-age=300" \
+            --acl public-read
+        # Cache-Control corto para HTML (300 segundos = 5 min):
+        # El index.html puede cambiar con cada despliegue, así aseguramos
+        # que el navegador lo refresque y apunte a los nuevos JS con hash.
+        #
+        # Fallback SPA:
+        # - Copiamos index.html a 404.html.
+        # - En un SPA (Angular), cualquier ruta (ej. /productos/123) debe
+        #   servir index.html. S3 devuelve 404, pero muestra 404.html.
+        # - Como 404.html == index.html, Angular interpreta la URL y
+        #   renderiza la vista correcta.
+
