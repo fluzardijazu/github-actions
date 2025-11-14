@@ -43,7 +43,7 @@ jobs:
 
       # 5) Instalar dependencias Angular
       - name: Install dependencies
-        run: npm ci
+        run: npm install --force
 
       # 6) Build Angular en modo producción
       - name: Build
