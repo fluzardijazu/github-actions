@@ -53,14 +53,12 @@ jobs:
       # 7) Subir assets con caché largo
       - name: Upload assets
         run: |
-          OUT="dist/template-ng-zorro"
           aws s3 sync "$OUT" "s3://guthub-actions-fl" \
             --delete \
             --exclude "*" \
             --include "*.js" --include "*.css" \
             --include "*.png" --include "*.jpg" --include "*.svg" --include "*.woff*" \
-            --cache-control "public,max-age=31536000,immutable" \
-            --acl public-read
+            --cache-control "public,max-age=31536000,immutable"
         # Cache-Control explicado:
         # - public: cacheable por todos
         # - max-age=31536000: 1 año en segundos
@@ -71,14 +69,13 @@ jobs:
       # 8) Subir HTML con caché corto y añadir fallback para SPA
       - name: Upload html + SPA fallback
         run: |
-          OUT="dist/template-ng-zorro"
           aws s3 sync "$OUT" "s3://guthub-actions-fl" \
             --exclude "*" --include "*.html" \
-            --cache-control "public,max-age=300" \
-            --acl public-read
+            --cache-control "public,max-age=300"
+
           aws s3 cp "$OUT/index.html" "s3://guthub-actions-fl/404.html" \
-            --cache-control "public,max-age=300" \
-            --acl public-read
+            --cache-control "public,max-age=300"
+
         # Cache-Control corto para HTML (300 segundos = 5 min):
         # El index.html puede cambiar con cada despliegue, así aseguramos
         # que el navegador lo refresque y apunte a los nuevos JS con hash.
