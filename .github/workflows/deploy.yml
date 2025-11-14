@@ -49,7 +49,7 @@ jobs:
       - name: Build
         run: npm run build -- --configuration production
         # Resultado: genera la carpeta dist/template-ng-zorro con todos los archivos listos
-      - name: Debug dist contents
+      - name: Debug dist contents #Esto es para debuggear la ruta del dist, permite loguear en el proceso de github actions
         run: |
           echo "PWD:"
           pwd
@@ -58,11 +58,11 @@ jobs:
           echo "=== ls dist ==="
           ls dist || echo "dist NO existe"
           echo "=== find dist (hasta 3 niveles) ==="
-          find dist -maxdepth 3 -type d || echo "no hay directorios en dist"
+          find dist -maxdepth 3 -type d || echo "no hay directorios en dist" 
       # 7) Subir assets con caché largo
       - name: Upload assets
         run: |
-          OUT="dist/mystoneridge"
+          OUT="dist/template-ng-zorro"
           aws s3 sync "$OUT" "s3://guthub-actions-fl" \
             --delete \
             --exclude "*" \
@@ -79,7 +79,7 @@ jobs:
       # 8) Subir HTML con caché corto y añadir fallback para SPA
       - name: Upload html + SPA fallback
         run: |
-          OUT="dist/mystoneridge"
+          OUT="dist/template-ng-zorro"
           aws s3 sync "$OUT" "s3://guthub-actions-fl" \
             --exclude "*" --include "*.html" \
             --cache-control "public,max-age=300"
